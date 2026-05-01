@@ -1,0 +1,27 @@
+project Particle_Sim is
+
+   for Source_Dirs use ("src");
+   for Object_Dir  use "obj";
+   for Exec_Dir    use ".";
+   for Main        use ("main.adb");
+
+   package Compiler is
+      for Default_Switches ("Ada") use
+        ("-O2",        --  optimise for speed
+         "-gnat2012",  --  Ada 2012 standard
+         "-gnata",     --  enable assertions
+         "-gnatwa",    --  all warnings
+         "-gnatVa",    --  all validity checks
+         "-gnatf",     --  full error reporting
+         "-g");        --  debug symbols (strip with objcopy if needed)
+   end Compiler;
+
+   package Linker is
+      for Default_Switches ("Ada") use ("-lm");
+   end Linker;
+
+   package Binder is
+      for Default_Switches ("Ada") use ("-Es");  --  symbolic tracebacks
+   end Binder;
+
+end Particle_Sim;
