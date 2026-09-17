@@ -17,36 +17,46 @@ package body Forces is
       return (F_Grav - F_EM) * R_Ij;
    end Pair_Force;
 
-   procedure Compute_All
-     (Particles : in out Particle.Array_Type;
-      N         : Positive;
-      B_Field   : Vec3.Vector)
-   is
-      F_Ij : Vec3.Vector;
-   begin
-      --  Zero accumulated forces
-      for I in 1 .. N loop
-         Particles (I).Force := Vec3.Zero;
-      end loop;
+    procedure Compute_Electric
+      (Particles : in out Particle.Array_Type;
+       N         : Positive)
+    is
+       F_Ij : Vec3.Vector;
+    begin
+       --  Zero accumulated forces
+       for I in 1 .. N loop
+          Particles (I).Force := Vec3.Zero;
+       end loop;
 
-      --  Pairwise interactions — Newton's 3rd law: compute once, apply twice
-      for I in 1 .. N - 1 loop
-         for J in I + 1 .. N loop
-            F_Ij := Pair_Force (Particles (I), Particles (J));
-            Particles (I).Force := Particles (I).Force + F_Ij;
-            Particles (J).Force := Particles (J).Force - F_Ij;
-         end loop;
-      end loop;
+       --  Pairwise interactions — Newton's 3rd law: compute once, apply twice
+       if N >= 2 then
+          for I in 1 .. N - 1 loop
+             for J in I + 1 .. N loop
+                F_Ij := Pair_Force (Particles (I), Particles (J));
+                Particles (I).Force := Particles (I).Force + F_Ij;
+                Particles (J).Force := Particles (J).Force - F_Ij;
+             end loop;
+          end loop;
+       end if;
+    end Compute_Electric;
 
-      --  Lorentz term: F_mag = q (v × B)
-      for I in 1 .. N loop
-         if Particles (I).Charge /= 0.0 then
-            Particles (I).Force :=
-              Particles (I).Force
-              + Particles (I).Charge
-                * Cross (Particles (I).Velocity, B_Field);
-         end if;
-      end loop;
-   end Compute_All;
+    procedure Compute_All
+      (Particles : in out Particle.Array_Type;
+       N         : Positive;
+       B_Field   : Vec3.Vector)
+    is
+    begin
+       Compute_Electric (Particles, N);
+
+       --  Lorentz term: F_mag = q (v × B)
+       for I in 1 .. N loop
+          if Particles (I).Charge /= 0.0 then
+             Particles (I).Force :=
+               Particles (I).Force
+               + Particles (I).Charge
+                 * Cross (Particles (I).Velocity, B_Field);
+          end if;
+       end loop;
+    end Compute_All;
 
 end Forces;

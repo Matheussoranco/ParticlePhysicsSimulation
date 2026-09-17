@@ -18,12 +18,19 @@ with Vec3;
 --    F_mag = q_i (v_i × B)
 package Forces is
 
-   --  Compute and accumulate forces for particles 1..N into each State.Force.
-   --  Forces are zeroed before accumulation.
-   procedure Compute_All
-     (Particles : in out Particle.Array_Type;
-      N         : Positive;
-      B_Field   : Vec3.Vector);
+    --  Compute and accumulate forces for particles 1..N into each State.Force.
+    --  Forces are zeroed before accumulation.
+    procedure Compute_All
+      (Particles : in out Particle.Array_Type;
+       N         : Positive;
+       B_Field   : Vec3.Vector);
+
+    --  Electric/gravitational part only (no Lorentz term).
+    --  Used by the Boris pusher, which applies the magnetic rotation
+    --  separately so gyromotion preserves |v_perp| exactly.
+    procedure Compute_Electric
+      (Particles : in out Particle.Array_Type;
+       N         : Positive);
 
    --  Force on Pi exerted by Pj (gravity + Coulomb, Plummer-softened).
    --  Exposed separately for unit testing and benchmarking.

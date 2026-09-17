@@ -50,12 +50,18 @@ package Scenarios is
       Output_Stride : Positive;       --  write every this many steps
    end record;
 
-   --  Configuration factories
-   function Hydrogen_Atom_Config                        return Config;
-   function Electron_Positron_Config                    return Config;
-   function Cyclotron_Config                            return Config;
-   function Alpha_Scattering_Config                     return Config;
-   function Random_N_Body_Config (N : Positive := 20)  return Config;
+    --  Configuration factories
+    function Hydrogen_Atom_Config                        return Config;
+    function Electron_Positron_Config                    return Config;
+    function Cyclotron_Config                            return Config;
+    function Alpha_Scattering_Config                     return Config;
+    --  Raises Constraint_Error if N > Particle.Max_N (512).
+    function Random_N_Body_Config (N : Positive := 20)  return Config;
+
+    --  Override the deterministic LCG seed used by Random_N_Body Setup.
+    --  Must be called before Setup; Seed = 0 is mapped to 1 (xorshift
+    --  forbids the all-zero state).
+    procedure Set_Random_Seed (Seed : Natural);
 
    --  Populate particle buffer and set N_Out to the number of active particles.
    procedure Setup

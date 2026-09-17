@@ -8,7 +8,8 @@ with Vec3;
 --  Electrostatic PE:    V_e =  Σ_{i<j} Ke q_i q_j / √(r_ij² + ε²)
 --  Total energy:        E   = T + V_g + V_e
 --  Linear momentum:     p   = Σ_i m_i v_i
---  Angular momentum:    L   = Σ_i m_i (r_i × v_i)
+--  Angular momentum:    L   = Σ_i m_i ((r_i − R_COM) × v_i)  (sobre o COM,
+--                       não sobre a origem; translação rígida não infla L)
 --  Energy drift:        δ   = |E(t) − E₀| / |E₀|
 package Diagnostics is
 

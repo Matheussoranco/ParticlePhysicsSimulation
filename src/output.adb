@@ -18,10 +18,19 @@ package body Output is
       return Raw;
    end Fmt;
 
-   procedure Open_Files (Prefix : String := "") is
-   begin
-      Create (Traj_File,   Out_File, Prefix & "trajectory.csv");
-      Create (Energy_File, Out_File, Prefix & "energy.csv");
+    procedure Open_Files (Prefix : String := "") is
+    begin
+       --  Close stale handles from a previous run in the same process.
+       if Is_Open (Traj_File) then
+          Close (Traj_File);
+       end if;
+       if Is_Open (Energy_File) then
+          Close (Energy_File);
+       end if;
+       --  Prefix carries "<scenario>_<timestamp>_" so consecutive runs no
+       --  longer overwrite trajectory.csv / energy.csv.
+       Create (Traj_File,   Out_File, Prefix & "trajectory.csv");
+       Create (Energy_File, Out_File, Prefix & "energy.csv");
       Put_Line (Traj_File,
                 "step,time_s,id,x_m,y_m,z_m,vx_ms,vy_ms,vz_ms");
       Put_Line (Energy_File,
@@ -29,11 +38,15 @@ package body Output is
                 & "px_kgms,py_kgms,pz_kgms,Lx,Ly,Lz,drift");
    end Open_Files;
 
-   procedure Close_Files is
-   begin
-      Close (Traj_File);
-      Close (Energy_File);
-   end Close_Files;
+    procedure Close_Files is
+    begin
+       if Is_Open (Traj_File) then
+          Close (Traj_File);
+       end if;
+       if Is_Open (Energy_File) then
+          Close (Energy_File);
+       end if;
+    end Close_Files;
 
    procedure Write_Trajectory
      (Step      : Natural;

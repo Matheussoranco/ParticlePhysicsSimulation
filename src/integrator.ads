@@ -13,11 +13,20 @@ with Vec3;
 --  Being symplectic, the method conserves a modified Hamiltonian exactly,
 --  so total energy oscillates around a fixed value (no secular drift).
 --  Global energy error is O(Δt²); local truncation error is O(Δt³).
+--
+--  LIMITATION — magnetic fields: the Lorentz force F = q (v × B) depends on
+--  velocity, while Velocity-Verlet evaluates forces from positions only.
+--  When B /= 0, Step automatically switches to the Boris pusher below
+--  (Boris 1970), which rotates the velocity with the exact gyro-angle and
+--  preserves |v_perp| to machine precision. E-field/gravity kicks stay
+--  second-order Verlet; see the body for the sequence.
 package Integrator is
 
-   --  Advance all N particles by one step of size DT.
-   --  Computes forces at the new positions internally (step 3 above).
-   procedure Step
+    --  Advance all N particles by one step of size DT.
+    --  B = 0     → classic Velocity-Verlet (symplectic, O(Δt²)).
+    --  B /= 0    → Boris pusher: half E-kick, magnetic rotation, drift at
+    --               v(+), force re-eval, second half E-kick.
+    procedure Step
      (Particles : in out Particle.Array_Type;
       N         : Positive;
       DT        : Long_Float;

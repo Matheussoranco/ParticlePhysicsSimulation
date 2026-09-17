@@ -14,23 +14,38 @@ package body Scenarios is
       S := S xor (S * 2 ** 5);
    end LCG_Next;
 
-   --  Returns value in (−1, 1)
-   function Rand_Sym (S : in out U32) return Long_Float is
-   begin
-      LCG_Next (S);
-      return Long_Float (S) / Long_Float (U32'Last) * 2.0 - 1.0;
-   end Rand_Sym;
+    --  Returns value in (−1, 1)
+    function Rand_Sym (S : in out U32) return Long_Float is
+    begin
+       LCG_Next (S);
+       return Long_Float (S) / Long_Float (U32'Last) * 2.0 - 1.0;
+    end Rand_Sym;
+
+    --  Configurable LCG seed (default preserves historic runs).
+    Current_Seed : U32 := 20240101;
+
+    procedure Set_Random_Seed (Seed : Natural) is
+    begin
+       if Seed = 0 then
+          Current_Seed := 1;
+       else
+          Current_Seed := U32 (Seed mod 2 ** 32);
+          if Current_Seed = 0 then
+             Current_Seed := 1;
+          end if;
+       end if;
+    end Set_Random_Seed;
 
    --  ─── Config factories ─────────────────────────────────────────────────
 
    function Hydrogen_Atom_Config return Config is
    begin
-      return (Kind          => Hydrogen_Atom,
-              N             => 2,
-              DT            => 5.0E-19,   --  ~1/304 of orbital period T₀
-              Duration      => 2.0E-15,   --  ~13 000 orbits
-              B_Field       => Vec3.Zero,
-              Output_Stride => 200);
+       return (Kind          => Hydrogen_Atom,
+               N             => 2,
+               DT            => 5.0E-19,   --  ~1/304 of orbital period T₀
+               Duration      => 2.0E-15,   --  ~13 orbits (T₀ ≈ 152 as)
+               B_Field       => Vec3.Zero,
+               Output_Stride => 200);
    end Hydrogen_Atom_Config;
 
    function Electron_Positron_Config return Config is
@@ -64,15 +79,20 @@ package body Scenarios is
               Output_Stride => 50);
    end Alpha_Scattering_Config;
 
-   function Random_N_Body_Config (N : Positive := 20) return Config is
-   begin
-      return (Kind          => Random_N_Body,
-              N             => N,
-              DT            => 1.0E-18,
-              Duration      => 1.0E-14,
-              B_Field       => Vec3.Zero,
-              Output_Stride => 500);
-   end Random_N_Body_Config;
+    function Random_N_Body_Config (N : Positive := 20) return Config is
+    begin
+       if N > Particle.Max_N then
+          raise Constraint_Error with
+            "Random_N_Body_Config: N =" & Positive'Image (N)
+            & " exceeds Particle.Max_N =" & Positive'Image (Particle.Max_N);
+       end if;
+       return (Kind          => Random_N_Body,
+               N             => N,
+               DT            => 1.0E-18,
+               Duration      => 1.0E-14,
+               B_Field       => Vec3.Zero,
+               Output_Stride => 500);
+    end Random_N_Body_Config;
 
    --  ─── Setup routines ───────────────────────────────────────────────────
 
@@ -155,18 +175,23 @@ package body Scenarios is
          ID       => 2);
    end Setup_Alpha_Scattering;
 
-   procedure Setup_Random_N_Body
-     (Particles : out Particle.Array_Type;
-      N         :     Positive)
-   is
-      Seed   : U32     := 20240101;
+    procedure Setup_Random_N_Body
+      (Particles : out Particle.Array_Type;
+       N         :     Positive)
+    is
+       Seed   : U32     := Current_Seed;
       R_Max  : constant Long_Float := 50.0 * Bohr_Radius;
-      V_Max  : constant Long_Float := 0.1  * Bohr_Velocity;
-      Kind   : Particle.Kind_Type;
-      Mass   : Long_Float;
-      Charge : Long_Float;
-   begin
-      for I in 1 .. N loop
+       V_Max  : constant Long_Float := 0.1  * Bohr_Velocity;
+       Kind   : Particle.Kind_Type;
+       Mass   : Long_Float;
+       Charge : Long_Float;
+    begin
+       if N > Particle.Max_N then
+          raise Constraint_Error with
+            "Setup_Random_N_Body: N =" & Positive'Image (N)
+            & " exceeds Particle.Max_N =" & Positive'Image (Particle.Max_N);
+       end if;
+       for I in 1 .. N loop
          --  Alternate proton / electron
          if I mod 2 = 1 then
             Kind   := Particle.Proton;

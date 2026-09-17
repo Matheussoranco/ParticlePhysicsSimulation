@@ -43,22 +43,37 @@ package body Diagnostics is
       S.Kinetic_Energy   := Kinetic_Energy   (Particles, N);
       S.Potential_Energy := Potential_Energy (Particles, N);
       S.Total_Energy     := S.Kinetic_Energy + S.Potential_Energy;
+      S.Linear_Momentum  := Vec3.Zero;
+      S.Angular_Momentum := Vec3.Zero;
+      R_COM := Vec3.Zero;
+      M_Tot := 0.0;
 
       for I in 1 .. N loop
-         S.Linear_Momentum  :=
+         S.Linear_Momentum :=
            S.Linear_Momentum
            + Particles (I).Mass * Particles (I).Velocity;
-         S.Angular_Momentum :=
-           S.Angular_Momentum
-           + Particles (I).Mass
-             * Cross (Particles (I).Position, Particles (I).Velocity);
          R_COM := R_COM + Particles (I).Mass * Particles (I).Position;
          M_Tot := M_Tot + Particles (I).Mass;
       end loop;
 
       if M_Tot > 0.0 then
          S.COM_Position := R_COM / M_Tot;
+      else
+         S.COM_Position := Vec3.Zero;
       end if;
+
+      --  L sobre o centro de massa (r - R_COM), não sobre a origem:
+      --  com a origem, uma translação rígida do sistema inteiro inflava L.
+      for I in 1 .. N loop
+         declare
+            R_Rel : constant Vec3.Vector :=
+              Particles (I).Position - S.COM_Position;
+         begin
+            S.Angular_Momentum :=
+              S.Angular_Momentum
+              + Particles (I).Mass * Cross (R_Rel, Particles (I).Velocity);
+         end;
+      end loop;
 
       if Initial_Energy /= 0.0 then
          S.Relative_Energy_Drift :=
