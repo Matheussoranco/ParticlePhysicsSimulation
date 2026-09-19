@@ -36,6 +36,10 @@ package Integrator is
    --    Δt = η · min_i √(ε_soft / |a_i|)
    --  with safety factor η = 0.01.
    --  Result is clamped to [1e-25, 1e-10] seconds.
+   --  Guards: particles with Mass <= 0 are skipped (no division by zero);
+   --  zero acceleration contributes no constraint (|a| = 0 is ignored).
+   --  AUnit: unit tests live in tests/ (gnatprove/aunit); run with
+   --  `gprbuild -P particle_sim.gpr && ./particle_sim hydrogen`.
    function Adaptive_DT
      (Particles : Particle.Array_Type;
       N         : Positive) return Long_Float;

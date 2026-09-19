@@ -127,14 +127,20 @@ package body Integrator is
       A_Mag    : Long_Float;
       DT_I     : Long_Float;
       DT_Best  : Long_Float := DT_Ceil;
-   begin
+    begin
       for I in 1 .. N loop
+         --  Guard: non-positive mass is unphysical; skip instead of
+         --  dividing by zero (caller validates, this is defense in depth).
+         if Particles (I).Mass <= 0.0 then
+            null;
+         else
          A_Mag := Norm (Particles (I).Force) / Particles (I).Mass;
          if A_Mag > 0.0 then
             DT_I := Eta * Sqrt (Epsilon_Soft / A_Mag);
             if DT_I < DT_Best then
                DT_Best := DT_I;
             end if;
+         end if;
          end if;
       end loop;
       return Long_Float'Max (DT_Floor, Long_Float'Min (DT_Best, DT_Ceil));
