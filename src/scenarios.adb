@@ -21,6 +21,20 @@ package body Scenarios is
        return Long_Float (S) / Long_Float (U32'Last) * 2.0 - 1.0;
     end Rand_Sym;
 
+    --  Rejection sampling gives a uniform point inside the unit sphere.
+    --  Each component still comes from the deterministic scenario seed.
+    function Random_In_Unit_Ball (S : in out U32) return Vec3.Vector is
+       Candidate : Vec3.Vector;
+    begin
+       loop
+          Candidate := (X => Rand_Sym (S),
+                        Y => Rand_Sym (S),
+                        Z => Rand_Sym (S));
+          exit when Vec3.Norm_Sq (Candidate) <= 1.0;
+       end loop;
+       return Candidate;
+    end Random_In_Unit_Ball;
+
     --  Configurable LCG seed (default preserves historic runs).
     Current_Seed : U32 := 20240101;
 
@@ -204,12 +218,8 @@ package body Scenarios is
          end if;
 
          Particles (I) :=
-           (Position => (X => Rand_Sym (Seed) * R_Max,
-                         Y => Rand_Sym (Seed) * R_Max,
-                         Z => Rand_Sym (Seed) * R_Max),
-            Velocity => (X => Rand_Sym (Seed) * V_Max,
-                         Y => Rand_Sym (Seed) * V_Max,
-                         Z => Rand_Sym (Seed) * V_Max),
+           (Position => R_Max * Random_In_Unit_Ball (Seed),
+            Velocity => V_Max * Random_In_Unit_Ball (Seed),
             Force    => Vec3.Zero,
             Mass     => Mass,
             Charge   => Charge,

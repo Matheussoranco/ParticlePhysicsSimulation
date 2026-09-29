@@ -184,6 +184,11 @@ package body Simulator is
       end loop;
 
       --  ── Final summary ─────────────────────────────────────────────────
+      if Total_Steps mod Cfg.Output_Stride /= 0 then
+         Snap := Diagnostics.Compute (Particles, N, Initial_E);
+         Output.Write_Trajectory (Total_Steps, Time, Particles, N);
+         Output.Write_Energy (Total_Steps, Time, Snap);
+      end if;
       Output.Close_Files;
       Put_Line (Bar);
       Put_Line ("  Simulation complete.");
