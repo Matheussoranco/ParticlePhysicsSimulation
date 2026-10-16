@@ -8,6 +8,7 @@ with Ada.Calendar;
 with Ada.Text_IO; use Ada.Text_IO;
 
 package body Simulator is
+   use type Vec3.Vector;
 
    --  Strip the leading space that Ada's 'Image inserts for non-negative values.
    function Img (X : Long_Float) return String is
@@ -96,7 +97,7 @@ package body Simulator is
       H, M, S  : Natural;
    begin
       Ada.Calendar.Split (Now, Year, Month, Day, Seconds);
-      Whole := Natural (Seconds);
+      Whole := Natural (Long_Float'Floor (Long_Float (Seconds)));
       H := Whole / 3600;
       M := (Whole mod 3600) / 60;
       S := Whole mod 60;
@@ -129,7 +130,7 @@ package body Simulator is
       --  Round (not truncate) so Duration/DT = 4000.9 → 4001 steps, and
       --  warn about the leftover fraction instead of silently dropping it.
       Steps_Real  := Cfg.Duration / Cfg.DT;
-      Total_Steps := Natural (Steps_Real + 0.5);
+      Total_Steps := Natural (Steps_Real);
       Remainder   := Cfg.Duration - Long_Float (Total_Steps) * Cfg.DT;
 
       --  ── Console banner ────────────────────────────────────────────────

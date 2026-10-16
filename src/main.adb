@@ -3,6 +3,7 @@ with Simulator;
 with Particle;
 with Ada.Text_IO;      use Ada.Text_IO;
 with Ada.Command_Line; use Ada.Command_Line;
+with Ada.Exceptions;
 
 --  Entry point.  Usage:
 --    particle_sim [scenario] [options]
@@ -17,6 +18,7 @@ with Ada.Command_Line; use Ada.Command_Line;
 --  options:
 --    --seed N | --seed=N   – LCG seed for Random_N_Body (default 20240101)
 procedure Main is
+   Argument_Error_Reported : Boolean := False;
 
    procedure Print_Usage is
    begin
@@ -70,6 +72,7 @@ procedure Main is
          Put_Line ("Invalid --seed value (expected natural number).");
          Print_Usage;
          Set_Exit_Status (Failure);
+         Argument_Error_Reported := True;
          raise;
    end Parse_Seed_Option;
 
@@ -153,11 +156,9 @@ begin
    Simulator.Run (Cfg);
 
 exception
-   when Constraint_Error =>
-      --  Catches Positive'Value / config errors escaping the handlers above.
-      if Exit_Status = Success then
-         Put_Line ("Invalid numeric argument.");
-         Print_Usage;
+   when Error : others =>
+      if not Argument_Error_Reported then
+         Put_Line ("Simulation failed: " & Ada.Exceptions.Exception_Information (Error));
          Set_Exit_Status (Failure);
       end if;
 end Main;

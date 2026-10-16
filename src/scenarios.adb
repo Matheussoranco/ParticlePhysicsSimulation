@@ -27,9 +27,9 @@ package body Scenarios is
        Candidate : Vec3.Vector;
     begin
        loop
-          Candidate := (X => Rand_Sym (S),
-                        Y => Rand_Sym (S),
-                        Z => Rand_Sym (S));
+          Candidate.X := Rand_Sym (S);
+          Candidate.Y := Rand_Sym (S);
+          Candidate.Z := Rand_Sym (S);
           exit when Vec3.Norm_Sq (Candidate) <= 1.0;
        end loop;
        return Candidate;
@@ -43,7 +43,7 @@ package body Scenarios is
        if Seed = 0 then
           Current_Seed := 1;
        else
-          Current_Seed := U32 (Seed mod 2 ** 32);
+          Current_Seed := U32 (Seed);
           if Current_Seed = 0 then
              Current_Seed := 1;
           end if;
@@ -217,14 +217,19 @@ package body Scenarios is
             Charge := -Q_E;
          end if;
 
+         declare
+           Position : constant Vec3.Vector := R_Max * Random_In_Unit_Ball (Seed);
+           Velocity : constant Vec3.Vector := V_Max * Random_In_Unit_Ball (Seed);
+         begin
          Particles (I) :=
-           (Position => R_Max * Random_In_Unit_Ball (Seed),
-            Velocity => V_Max * Random_In_Unit_Ball (Seed),
+           (Position => Position,
+            Velocity => Velocity,
             Force    => Vec3.Zero,
             Mass     => Mass,
             Charge   => Charge,
             Kind     => Kind,
             ID       => I);
+         end;
       end loop;
    end Setup_Random_N_Body;
 

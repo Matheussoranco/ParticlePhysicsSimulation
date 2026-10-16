@@ -3,3 +3,8 @@
 
 # Ada Library Information
 *.ali
+
+# GPRbuild outputs
+obj/
+/main
+/main.exe
